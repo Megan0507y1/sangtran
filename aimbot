@@ -1,0 +1,50 @@
+local UIS = game:GetService("UserInputService")
+local camera = game.Workspace.CurrentCamera
+local TS = game:GetService("TweenService")
+local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+
+_G.aim = false
+
+-- Function to find the closest enemy player
+local function getClosest()
+    local closestDistance = math.huge
+    local closestPlayer = nil
+
+    for _, v in pairs(game.Players:GetPlayers()) do
+        if v ~= game.Players.LocalPlayer and v.Team ~= game.Players.LocalPlayer.Team then
+            if v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Head") then
+                local distance = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - v.Character.HumanoidRootPart.Position).magnitude
+                if distance < closestDistance then
+                    closestDistance = distance
+                    closestPlayer = v
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+-- Start smooth aiming
+UIS.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.aim = true
+        
+        while _G.aim do
+            local target = getClosest()
+            if target and target.Character and target.Character:FindFirstChild("Head") then
+                local targetCFrame = CFrame.new(camera.CFrame.Position, target.Character.Head.Position)
+                local tween = TS:Create(camera, tweenInfo, {CFrame = targetCFrame})
+                tween:Play()
+            end
+            wait(0.05)  -- Reduce loop intensity while keeping it smooth
+        end
+    end
+end)
+
+-- Stop aiming when mouse button is released
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        _G.aim = false
+    end
+end)
