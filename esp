@@ -1,8 +1,7 @@
--- Services
 local Players = game:GetService("Players")
 
 -- Function to create and apply the ESP highlight
-local function applyHighlight(player)
+local function applyHighlight(player, fillColor, outlineColor, depthMode)
     -- Ensure the character exists before applying the highlight
     player.CharacterAdded:Connect(function(character)
         -- Make sure the Highlight only gets added once to avoid duplicates
@@ -10,9 +9,9 @@ local function applyHighlight(player)
             local highlight = Instance.new("Highlight")
             highlight.Name = "ESP_Highlight"
             highlight.Parent = character  -- Attach highlight to the character
-            highlight.FillColor = Color3.fromRGB(255, 255, 0)  -- Yellow color
-            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red outline
-            highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- Works behind objects
+            highlight.FillColor = fillColor or Color3.fromRGB(255, 255, 0)  -- Default Yellow color
+            highlight.OutlineColor = outlineColor or Color3.fromRGB(255, 0, 0)  -- Default Red outline
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop  -- Ensure the highlight is always visible through objects
         end
     end)
     
@@ -24,9 +23,9 @@ local function applyHighlight(player)
             local highlight = Instance.new("Highlight")
             highlight.Name = "ESP_Highlight"
             highlight.Parent = character
-            highlight.FillColor = Color3.fromRGB(255, 255, 0)  -- Yellow color
-            highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red outline
-            highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- Works behind objects
+            highlight.FillColor = fillColor or Color3.fromRGB(255, 255, 0)
+            highlight.OutlineColor = outlineColor or Color3.fromRGB(255, 0, 0)
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         end
     end
 end
