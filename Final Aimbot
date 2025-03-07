@@ -1,0 +1,104 @@
+local dwCamera = workspace.CurrentCamera
+local dwRunService = game:GetService("RunService")
+local dwUIS = game:GetService("UserInputService")
+local dwEntities = game:GetService("Players")
+local dwLocalPlayer = dwEntities.LocalPlayer
+local dwMouse = dwLocalPlayer:GetMouse()
+
+local settings = {
+    Aimbot = true,
+    Aiming = false,
+    Aimbot_AimPart = "Head",  -- Targeting Head
+    Aimbot_TeamCheck = false, -- Ignore team check (set to true for team check)
+    Aimbot_Draw_FOV = true,
+    Aimbot_FOV_Radius = 200,
+    Aimbot_FOV_Color = Color3.fromRGB(255, 255, 255),
+    Aimbot_visiblecheck = false,
+    Aimbot_Key = Enum.UserInputType.MouseButton2, -- Hotkey set to right-click (MouseButton2)
+    Aimbot_Onscreen = true,
+    Aimbot_Speed = 10
+}
+
+-- FOV Circle (visual indicator for aiming radius)
+local fovcircle = Drawing.new("Circle")
+fovcircle.Visible = settings.Aimbot_Draw_FOV
+fovcircle.Radius = settings.Aimbot_FOV_Radius
+fovcircle.Color = settings.Aimbot_FOV_Color
+fovcircle.Thickness = 1
+fovcircle.Filled = false
+fovcircle.Transparency = 0
+fovcircle.Position = Vector2.new(dwCamera.ViewportSize.X / 2, dwCamera.ViewportSize.Y / 2)
+
+-- Function to check if target is visible
+local function inlos(p, ...)
+    return #dwCamera:GetPartsObscuringTarget({p}, {dwCamera, dwLocalPlayer.Character, ...}) == 0
+end
+
+-- Aimbot Targeting Logic
+dwRunService.RenderStepped:Connect(function()
+    local dist = math.huge
+    local closest_char = nil
+
+    if settings.Aimbot and settings.Aiming then
+        for i, v in next, dwEntities:GetChildren() do
+            if v ~= dwLocalPlayer and
+                v.Character and
+                v.Character:FindFirstChild("HumanoidRootPart") and
+                v.Character:FindFirstChild("Humanoid") and
+                v.Character:FindFirstChild("Humanoid").Health > 0 then
+
+                -- Team check (if enabled)
+                if settings.Aimbot_TeamCheck == true and v.Team ~= dwLocalPlayer.Team or settings.Aimbot_TeamCheck == false then
+                    local char = v.Character
+                    local char_part_pos, is_onscreen = dwCamera:WorldToViewportPoint(char[settings.Aimbot_AimPart].Position)
+
+                    -- Check if target is onscreen and within the FOV
+                    if is_onscreen and settings.Aimbot_Onscreen or settings.Aimbot_Onscreen == false then
+                        local mag = (Vector2.new(dwMouse.X, dwMouse.Y) - Vector2.new(char_part_pos.X, char_part_pos.Y)).Magnitude
+                        if mag < dist and mag < settings.Aimbot_FOV_Radius then
+                            dist = mag
+                            closest_char = char
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Aim at closest target if found
+        if closest_char ~= nil and
+            closest_char:FindFirstChild("HumanoidRootPart") and
+            closest_char:FindFirstChild("Humanoid") and
+            closest_char:FindFirstChild("Humanoid").Health > 0 then
+
+            local targetPos = closest_char[settings.Aimbot_AimPart].Position
+
+            -- Perform line-of-sight check if enabled
+            if inlos(targetPos, closest_char) and settings.Aimbot_visiblecheck then
+                dwCamera.CFrame = dwCamera.CFrame:Lerp(CFrame.new(dwCamera.CFrame.Position, targetPos), settings.Aimbot_Speed * 0.02)
+            elseif not settings.Aimbot_visiblecheck then
+                dwCamera.CFrame = dwCamera.CFrame:Lerp(CFrame.new(dwCamera.CFrame.Position, targetPos), settings.Aimbot_Speed * 0.02)
+            end
+        end
+    end
+end)
+
+-- Input events for right-click (MouseButton2)
+dwUIS.InputBegan:Connect(function(inputObject, gameProcessed)
+    if inputObject.UserInputType == settings.Aimbot_Key then
+        settings.Aiming = true  -- Start aiming when right-click is pressed
+    end
+end)
+
+dwUIS.InputEnded:Connect(function(inputObject, gameProcessed)
+    if inputObject.UserInputType == settings.Aimbot_Key then
+        settings.Aiming = false  -- Stop aiming when right-click is released
+    end
+end)
+
+-- FOV Circle Update on screen
+dwRunService.RenderStepped:Connect(function()
+    fovcircle.Position = Vector2.new(dwCamera.ViewportSize.X / 2, dwCamera.ViewportSize.Y / 2)
+    fovcircle.Radius = settings.Aimbot_FOV_Radius
+end)
+
+-- You can add settings or UI elements for toggling or modifying the aimbot settings here.
