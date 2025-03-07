@@ -1,0 +1,47 @@
+-- Services
+local Players = game:GetService("Players")
+
+-- Function to highlight a player
+local function highlightPlayer(player)
+    -- Wait until the player has a character
+    player.CharacterAdded:Connect(function(character)
+        -- Ensure the highlight is always added to the new character
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = character  -- Attach highlight to the character
+        highlight.FillColor = Color3.fromRGB(255, 255, 0)  -- Yellow color
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red outline
+        highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- Works behind objects
+    end)
+    
+    -- If the player already has a character when the script runs
+    if player.Character then
+        local character = player.Character
+        local highlight = Instance.new("Highlight")
+        highlight.Parent = character  -- Attach highlight to the character
+        highlight.FillColor = Color3.fromRGB(255, 255, 0)  -- Yellow color
+        highlight.OutlineColor = Color3.fromRGB(255, 0, 0)  -- Red outline
+        highlight.DepthMode = Enum.HighlightDepthMode.Occluded  -- Works behind objects
+    end
+end
+
+-- Function to highlight all players in the game
+local function highlightAllPlayers()
+    for _, player in pairs(Players:GetPlayers()) do
+        -- Apply ESP to each player already in the game
+        highlightPlayer(player)
+    end
+end
+
+-- Ensure ESP is applied to all players when they join and when they reset
+Players.PlayerAdded:Connect(function(player)
+    -- Apply ESP when the player joins
+    highlightPlayer(player)
+    
+    -- Apply ESP to the player's character when they respawn or reset
+    player.CharacterAdded:Connect(function()
+        highlightPlayer(player)
+    end)
+end)
+
+-- Call the function for all players that are already in the game when the script starts
+highlightAllPlayers()
