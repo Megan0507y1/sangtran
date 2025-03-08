@@ -1,0 +1,87 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local function createBoxESP(player, character)
+    if not character then return end
+    local torso = character:FindFirstChild("HumanoidRootPart")
+    if not torso then return end
+
+    -- Create a box frame
+    local box = Instance.new("BoxHandleAdornment")
+    box.Size = Vector3.new(4, 6, 4) -- Adjust box size
+    box.Adornee = torso
+    box.Color3 = Color3.fromRGB(255, 255, 255) -- White box
+    box.Transparency = 0.3
+    box.AlwaysOnTop = true
+    box.ZIndex = 0
+    box.Parent = game.Workspace
+
+    -- Create a nametag
+    local billboard = Instance.new("BillboardGui")
+    billboard.Adornee = torso
+    billboard.Size = UDim2.new(4, 0, 1, 0)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.AlwaysOnTop = true
+    billboard.Parent = game.Workspace
+
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = player.Name -- Ensure proper name display
+    nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Font = Enum.Font.SourceSansBold
+    nameLabel.TextSize = 20
+    nameLabel.Parent = billboard
+
+    -- Remove ESP and nametag when character dies
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.Died:Connect(function()
+            box:Destroy()
+            billboard:Destroy()
+        end)
+    end
+
+    -- Remove ESP and nametag when the character is removed
+    character.AncestryChanged:Connect(function(_, parent)
+        if not parent then
+            box:Destroy()
+            billboard:Destroy()
+        end
+    end)
+end
+
+local function applyESP(player)
+    player.CharacterAdded:Connect(function(character)
+        task.wait(0.5) -- Wait for the character to fully load
+        createBoxESP(player, character)
+    end)
+
+    -- Apply to existing character
+    if player.Character then
+        createBoxESP(player, player.Character)
+    end
+end
+
+-- Apply ESP to all current and new players
+for _, player in ipairs(Players:GetPlayers()) do
+    applyESP(player)
+end
+Players.PlayerAdded:Connect(applyESP)
+
+-- Remove ESP and nametag when a player leaves
+task.spawn(function()
+    Players.PlayerRemoving:Connect(function(player)
+        if player.Character then
+            for _, obj in pairs(game.Workspace:GetChildren()) do
+                if obj:IsA("BoxHandleAdornment") and obj.Adornee and obj.Adornee:IsDescendantOf(player.Character) then
+                    obj:Destroy()
+                end
+                if obj:IsA("BillboardGui") and obj.Adornee and obj.Adornee:IsDescendantOf(player.Character) then
+                    obj:Destroy()
+                end
+            end
+        end
+    end)
+end)
