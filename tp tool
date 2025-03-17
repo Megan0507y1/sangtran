@@ -1,0 +1,15 @@
+local tool = Instance.new("Tool")
+tool.Name = "My Nigga"
+tool.RequiresHandle = false  -- No need for a physical tool part
+tool.Parent = game.Players.LocalPlayer.Backpack
+
+local player = game.Players.LocalPlayer
+local mouse = player:GetMouse()
+
+tool.Activated:Connect(function()
+    local character = player.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local targetPosition = mouse.Hit.Position
+        character.HumanoidRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))  -- Slightly above the ground to avoid getting stuck
+    end
+end)
