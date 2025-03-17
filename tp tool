@@ -1,15 +1,33 @@
 local tool = Instance.new("Tool")
+tool.RequiresHandle = false
 tool.Name = "My Nigga"
-tool.RequiresHandle = false  -- No need for a physical tool part
 tool.Parent = game.Players.LocalPlayer.Backpack
 
-local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local localPlayer = Players.LocalPlayer
+local mouse = localPlayer:GetMouse()
 
-tool.Activated:Connect(function()
-    local character = player.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local targetPosition = mouse.Hit.Position
-        character.HumanoidRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0))  -- Slightly above the ground to avoid getting stuck
+local function teleport()
+    if mouse.Target then
+        local targetPosition = mouse.Hit.p
+        local character = localPlayer.Character
+        if character and character:FindFirstChild("HumanoidRootPart") then
+            character.HumanoidRootPart.CFrame = CFrame.new(targetPosition + Vector3.new(0, 3, 0)) -- Teleports slightly above to avoid falling
+        end
     end
+end
+
+tool.Activated:Connect(teleport)
+
+-- Ensure the tool never disappears
+tool.AncestryChanged:Connect(function()
+    if not tool.Parent then
+        tool.Parent = localPlayer.Backpack
+    end
+end)
+
+localPlayer.CharacterRemoving:Connect(function()
+    wait(5) -- Wait a bit before adding back
+    tool.Parent = localPlayer.Backpack
 end)
